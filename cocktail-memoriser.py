@@ -1,6 +1,6 @@
-# file: cocktail_memorizer.py
 import sys
-from PyQt5.QtWidgets import QApplication, QMainWindow, QLabel, QVBoxLayout, QWidget, QPushButton, QHBoxLayout, QTabWidget, QSpacerItem, QSizePolicy
+import random
+from PyQt5.QtWidgets import QApplication, QMainWindow, QLabel, QVBoxLayout, QWidget, QPushButton, QHBoxLayout, QTabWidget, QTableWidget, QComboBox, QLineEdit, QTableWidgetItem
 
 # Example cocktail data
 cocktails = [
@@ -160,7 +160,6 @@ cocktails = [
         'garnish': ['Salt','Lemon'],
         'glass': 'Margarita'
     }
-
 ]
 
 class CocktailMemorizer(QMainWindow):
@@ -226,13 +225,42 @@ class CocktailMemorizer(QMainWindow):
         tab.setLayout(vbox)
 
     def initTestTab(self, tab):
-        start_quiz_button = QPushButton('Start Quiz', self)
-        start_quiz_button.clicked.connect(self.start_quiz)
+        # Widgets
+        self.quiz_cocktail_name_label = QLabel('Cocktail Name', self)
+        self.ingredients_table = QTableWidget()
+        self.topup_dropdown = QComboBox()
+        self.glass_dropdown = QComboBox()
+        self.garnish_line_edits = []
+        self.garnish_labels = []  # Initialize list for garnish labels
+        self.check_button = QPushButton('Check', self)
+        self.next_button = QPushButton('Next', self)
 
+        # Layout
         vbox = QVBoxLayout()
-        vbox.addWidget(start_quiz_button)
+        vbox.addWidget(self.quiz_cocktail_name_label)
+        vbox.addWidget(self.ingredients_table)
+        vbox.addWidget(QLabel('Top-Up', self))
+        vbox.addWidget(self.topup_dropdown)
+        vbox.addWidget(QLabel('Glass', self))
+        vbox.addWidget(self.glass_dropdown)
         
+        for i in range(3):  # Assuming maximum 3 garnishes per cocktail
+            garnish_label = QLabel(f'Garnish {i + 1}', self)
+            self.garnish_labels.append(garnish_label)  # Add label to the list
+            garnish_line_edit = QLineEdit()
+            self.garnish_line_edits.append(garnish_line_edit)
+            vbox.addWidget(garnish_label)
+            vbox.addWidget(garnish_line_edit)
+
+        hbox = QHBoxLayout()
+        hbox.addWidget(self.check_button)
+        hbox.addWidget(self.next_button)
+        vbox.addLayout(hbox)
+
         tab.setLayout(vbox)
+
+        self.start_quiz()
+
 
     def update_display(self):
         cocktail = cocktails[self.current_cocktail_index]
@@ -253,8 +281,51 @@ class CocktailMemorizer(QMainWindow):
         self.update_display()
 
     def start_quiz(self):
-        # Placeholder for quiz functionality
-        self.cocktail_name_label.setText("Quiz not implemented yet")
+        # Select a random cocktail
+        cocktail = random.choice(cocktails)
+        
+        # Populate UI elements with cocktail data
+        self.quiz_cocktail_name_label.setText(f"Cocktail Name: {cocktail['name']}")
+        
+        # Populate Ingredients table
+        self.ingredients_table.setRowCount(len(cocktail['ingredients']))
+        self.ingredients_table.setColumnCount(2)
+        self.ingredients_table.setHorizontalHeaderLabels(["Ingredient", "Measurement"])  # Set column labels
+        for i, (ingredient, measurement) in enumerate(zip(cocktail['ingredients'], cocktail['measurements'])):
+            self.ingredients_table.setItem(i, 0, QTableWidgetItem(ingredient))
+            self.ingredients_table.setItem(i, 1, QTableWidgetItem(measurement))
+        
+        # Populate Top-Up and Glass dropdowns
+        self.topup_dropdown.clear()
+        self.topup_dropdown.addItems(['None'] + [cocktail['topup']])
+        self.glass_dropdown.clear()
+        self.glass_dropdown.addItems([''] + [cocktail['glass']])
+        
+        # Populate Garnish line edits and labels
+        for i, garnish in enumerate(cocktail['garnish']):
+            if i < len(self.garnish_line_edits):
+                self.garnish_line_edits[i].setText(garnish)
+                self.garnish_line_edits[i].setVisible(True)  # Set visibility to True for existing line edits
+                self.garnish_labels[i].setVisible(True)  # Set visibility to True for existing labels
+            else:
+                break
+        
+        # Hide extra line edits and labels if there are no more garnishes
+        for j in range(i + 1, len(self.garnish_line_edits)):
+            self.garnish_line_edits[j].setVisible(False)
+            self.garnish_labels[j].setVisible(False)
+        
+        # Connect buttons
+        self.check_button.clicked.connect(self.check_answer)
+        self.next_button.clicked.connect(self.start_quiz)
+
+
+
+
+
+    def check_answer(self):
+        # Placeholder for checking user's answer
+        pass
 
 if __name__ == '__main__':
     try:
